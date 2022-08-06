@@ -4,19 +4,26 @@
 <meta charset="utf-8" />
 <title>Display buildings in 3D</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<link rel="icon" href="icon.png" sizes="64x64" />
 <script src="maplibregl/maplibre-gl.js"></script>
 <link href="maplibregl/maplibre-gl.css" rel="stylesheet" />
 <style>
-	body { margin: 0; padding: 0; }
-	#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .maplibregl-marker {cursor: pointer}
 </style>
 </head>
 <body>
 <div id="map"></div>
 <script>
+    mapCenter = [8.40414,49.01376]
+    mapZoom = 16
+    popupHTML = '<h2>Schloss Karlsruhe</h2><a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>'
+    markerColor = "#e68600"
+
     var map = new maplibregl.Map({
-        center: [8.40444, 49.01352],
-        zoom: 16,
+        center: mapCenter,
+        zoom: mapZoom,
         pitch: 45,
         bearing: -17.6,
         container: 'map',
@@ -29,6 +36,20 @@
         fixAttributions(json)
         map.setStyle(json)
     })
+
+    const nav = new maplibregl.NavigationControl({visualizePitch: true});
+    map.addControl(nav, 'bottom-right');
+
+    map.addControl(new maplibregl.FullscreenControl());
+
+    const popup = new maplibregl.Popup({ offset: 25, closeOnClick: false })
+        .setHTML(popupHTML)
+        .setLngLat(mapCenter)
+    const marker = new maplibregl.Marker({color: markerColor})
+        .setLngLat(mapCenter)
+        .setPopup(popup)
+        .addTo(map);
+    marker.togglePopup();
 
     function useMaptilerForTiles(style) {
         style.sprite = window.location.href + "/../qwant-style/sprite"
@@ -65,9 +86,9 @@
     }
 
     function fixAttributions(style) {
-        style.sources.basemap.attribution=""
+        style.sources.openmaptiles.attribution=""
         style.sources.poi.attribution=""
-        style.sources.openmaptiles.attribution=`
+        style.sources.basemap.attribution=`
             <a href=\"https://github.com/Qwant/qwant-basic-gl-style/blob/master/LICENSE.md#design-license-cc-by-40\" target=\"_blank\">&copy; Qwant</a>
             <a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">&copy; MapTiler</a>
             <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>`

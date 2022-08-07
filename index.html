@@ -10,6 +10,7 @@
 <style>
     body { margin: 0; padding: 0; }
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    #mapStyle { min-width: 4.5em !important; }
     .maplibregl-marker {cursor: pointer}
 </style>
 </head>
@@ -46,11 +47,15 @@
     });
 
     /* Set the style */
+    var mapStyles = [{'name': 'Karte', 'data': null},
+                    {'name': 'Satellit', 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
+    var nextMapStyle = undefined
     fetch('qwant-style/built-style.json').then((response) => response.json()).then((json) => {
         useMaptilerForTiles(json)
         add3dBuildingSource(json)
         fixAttributions(json)
-        map.setStyle(json)
+        mapStyles[0].data = json
+        map.setStyle(mapStyles[0].data)
     })
 
     /* Setup controls and popup */
@@ -74,6 +79,24 @@
         .addTo(map);
     marker.togglePopup();
 
+    //Toggle satellite / streets view
+    mapStyle = document.createElement("button");
+    mapStyle.id = "mapStyle";
+    mapStyle.type = "button";
+    mapStyle.addEventListener("click", toggleMapStyle);
+    toggleMapStyle(); // initialize button text
+    mapStyleDiv = document.createElement("div");
+    mapStyleDiv.appendChild(mapStyle);
+    mapStyleDiv.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group");
+    document.getElementsByClassName("maplibregl-ctrl-top-left")[0].appendChild(mapStyleDiv);
+
+    function toggleMapStyle() {
+            if (nextMapStyle == undefined) nextMapStyle = 0;
+            map.setStyle(mapStyles[nextMapStyle].data);
+            nextMapStyle = (nextMapStyle + 1) % mapStyles.length
+            mapStyle.innerText = mapStyles[nextMapStyle].name;
+            mapStyle.setAttribute("aria-label", mapStyles[nextMapStyle].name);
+    }
 
     function useMaptilerForTiles(style) {
         style.sprite = window.location.href + "/../qwant-style/sprite"
@@ -83,7 +106,7 @@
     }
 
     function add3dBuildingSource(style) {
-        //from https://api.maptiler.com/maps/streets/style.json?key=...
+        //taken from https://api.maptiler.com/maps/streets/style.json?key=...
         style.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=" + accessToken,"type":"vector"}
         style.layers.push({
             "id": "building-3d",

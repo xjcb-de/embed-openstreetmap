@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>Display buildings in 3D</title>
+<title>Landkarte</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
 <link rel="icon" href="icon.png" sizes="64x64" />
 <script src="maplibregl/maplibre-gl.js"></script>
@@ -16,26 +16,49 @@
 <body>
 <div id="map"></div>
 <script>
+    /*   ---------- CONFIGURATION ----------   */
+    accessToken = "get_your_own_OpIi9ZULNHzrESv6T2vL" //get your key from https://cloud.maptiler.com/account/keys/
     mapCenter = [8.40414,49.01376]
     mapZoom = 16
     popupHTML = '<h2>Schloss Karlsruhe</h2><a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>'
     markerColor = "#e68600"
+    /*   -----------------------------------   */
 
+    /* Create the map */
     var map = new maplibregl.Map({
         center: mapCenter,
         zoom: mapZoom,
         pitch: 45,
         bearing: -17.6,
         container: 'map',
-        antialias: true
+        antialias: true,
+        cooperativeGestures: true, //todo (not working yet with maplibregl)
+        locale: {
+            'FullscreenControl.Enter': 'Vollbild',
+            'FullscreenControl.Exit': 'Vollbildmodus beenden',
+            'NavigationControl.ResetBearing': 'Drehung zurücksetzen',
+            'NavigationControl.ZoomIn': 'Vergrößern',
+            'NavigationControl.ZoomOut': 'Verkleinern',
+            'ScrollZoomBlocker.CtrlMessage': 'Verwende Strg+Scrollen zum Zoomen der Karte',
+            'ScrollZoomBlocker.CmdMessage': 'Verwende ⌘+Scrollen zum Zoomen der Karte',
+            'TouchPanBlocker.Message': 'Verschieben der Karte mir zwei Fingern',
+        },
     });
 
+    /* Set the style */
     fetch('qwant-style/built-style.json').then((response) => response.json()).then((json) => {
         useMaptilerForTiles(json)
         add3dBuildingSource(json)
         fixAttributions(json)
         map.setStyle(json)
     })
+
+    /* Setup controls and popup */
+    for (className of ["maplibregl-compact-show", "mapboxgl-compact-show"]) {
+        for (node of document.getElementsByClassName(className)) {
+            node.classList.remove(className) //initially hide attributions in mobile view
+        }
+    }
 
     const nav = new maplibregl.NavigationControl({visualizePitch: true});
     map.addControl(nav, 'bottom-right');
@@ -51,16 +74,17 @@
         .addTo(map);
     marker.togglePopup();
 
+
     function useMaptilerForTiles(style) {
         style.sprite = window.location.href + "/../qwant-style/sprite"
-        style.glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL"
-        style.sources.basemap.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL"
-        style.sources.poi.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=get_your_own_OpIi9ZULNHzrESv6T2vL"
+        style.glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=" + accessToken
+        style.sources.basemap.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
+        style.sources.poi.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
     }
 
     function add3dBuildingSource(style) {
         //from https://api.maptiler.com/maps/streets/style.json?key=...
-        style.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=get_your_own_OpIi9ZULNHzrESv6T2vL","type":"vector"}
+        style.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=" + accessToken,"type":"vector"}
         style.layers.push({
             "id": "building-3d",
             "type": "fill-extrusion",

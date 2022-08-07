@@ -17,24 +17,19 @@
 <body>
 <div id="map"></div>
 <script>
-    /*   ---------- CONFIGURATION ----------   */
-    accessToken = "get_your_own_OpIi9ZULNHzrESv6T2vL" //get your key from https://cloud.maptiler.com/account/keys/
-    mapCenter = [8.40414,49.01376]
-    mapZoom = 16
-    popupHTML = '<h2>Schloss Karlsruhe</h2><a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>'
-    markerColor = "#e68600"
-    /*   -----------------------------------   */
-
-    /* Create the map */
-    var map = new maplibregl.Map({
-        center: mapCenter,
-        zoom: mapZoom,
-        pitch: 45,
-        bearing: -17.6,
-        container: 'map',
-        antialias: true,
-        cooperativeGestures: true, //todo (not working yet with maplibregl)
-        locale: {
+    let locale_en = {
+        "name": "en",
+        "qwantStyleName": "Map",
+        "qwantStyleURI": "qwant-style/built-style-en.json",
+        "maptilerHybridStyleName": "Satellite",
+        "mapLocale": {}
+    }
+    let locale_de = {
+        "name": "de",
+        "qwantStyleName": "Karte",
+        "qwantStyleURI": "qwant-style/built-style-de.json",
+        "maptilerHybridStyleName": "Satellit",
+        "mapLocale": {
             'FullscreenControl.Enter': 'Vollbild',
             'FullscreenControl.Exit': 'Vollbildmodus beenden',
             'NavigationControl.ResetBearing': 'Drehung zurücksetzen',
@@ -43,19 +38,54 @@
             'ScrollZoomBlocker.CtrlMessage': 'Verwende Strg+Scrollen zum Zoomen der Karte',
             'ScrollZoomBlocker.CmdMessage': 'Verwende ⌘+Scrollen zum Zoomen der Karte',
             'TouchPanBlocker.Message': 'Verschieben der Karte mir zwei Fingern',
-        },
+        }
+    }
+
+    /*   ---------- CONFIGURATION ----------   */
+    accessToken = "get_your_own_OpIi9ZULNHzrESv6T2vL" //get your key from https://cloud.maptiler.com/account/keys/
+    locale = locale_en //locale_en and locale_de are currently supported
+    mapCenter = [8.40414,49.01376]
+    mapZoom = 16
+    mapPitch = 45,      //set to 0 if not needed
+    mapBearing = -17.6, //set to 0 if not needed
+    popupHTML = '<h2>Schloss Karlsruhe</h2><a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>'
+    markerColor = "#e68600"
+    /*   -----------------------------------   */
+
+    /* Create the map */
+    var map = new maplibregl.Map({
+        center: mapCenter,
+        zoom: mapZoom,
+        pitch: mapPitch,
+        bearing: mapBearing,
+        container: 'map',
+        antialias: true,
+        cooperativeGestures: true, //todo (not working yet with maplibregl)
+        locale: locale.mapLocale
     });
 
     /* Set the style */
-    var mapStyles = [{'name': 'Karte', 'data': null},
-                    {'name': 'Satellit', 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
+    var mapStyles = [{'name': locale.qwantStyleName, 'data': null},
+                    {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
     var nextMapStyle = undefined
-    fetch('qwant-style/built-style.json').then((response) => response.json()).then((json) => {
+
+    //qwantStyle is loaded from local file, then changed and after that it is set as the current style of the map
+    fetch(locale.qwantStyleURI).then((response) => response.json()).then((json) => {
         useMaptilerForTiles(json)
         add3dBuildingSource(json)
         fixAttributions(json)
         mapStyles[0].data = json
-        map.setStyle(mapStyles[0].data)
+        map.setStyle(mapStyles[0].data, false)
+    })
+
+    //maptilerHybridStyle is added to the map on demand. After it is loaded, the locale is changed here.
+    map.on('styledata', (e) => {
+        if (e.style.stylesheet.id == "hybrid") {
+            //layers that contain a value with "name" in it => have to be adapted to the locale
+            for (layerId of ["road_label", "place_label", "state_label", "country_label"]) {
+                map.setLayoutProperty(layerId, 'text-field', ['get','name:' + locale.name])
+            }
+        }
     })
 
     /* Setup controls and popup */
@@ -79,7 +109,7 @@
         .addTo(map);
     marker.togglePopup();
 
-    //Toggle satellite / streets view
+    /* Toggle satellite / streets view */
     mapStyle = document.createElement("button");
     mapStyle.id = "mapStyle";
     mapStyle.type = "button";
@@ -92,7 +122,7 @@
 
     function toggleMapStyle() {
             if (nextMapStyle == undefined) nextMapStyle = 0;
-            map.setStyle(mapStyles[nextMapStyle].data);
+            map.setStyle(mapStyles[nextMapStyle].data, false);
             nextMapStyle = (nextMapStyle + 1) % mapStyles.length
             mapStyle.innerText = mapStyles[nextMapStyle].name;
             mapStyle.setAttribute("aria-label", mapStyles[nextMapStyle].name);

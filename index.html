@@ -82,9 +82,19 @@
     map.on('styledata', (e) => {
         if (e.style.stylesheet.id == "hybrid") {
             //layers that contain a value with "name" in it => have to be adapted to the locale
-            for (layerId of ["road_label", "place_label", "state_label", "country_label"]) {
-                map.setLayoutProperty(layerId, 'text-field', ['get','name:' + locale.name])
+            for (layerId of ["state_label", "country_label"]) {
+                map.setLayoutProperty(layerId, 'text-field', ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]])
             }
+            map.setLayoutProperty("road_label", 'text-field',
+                ["concat",
+                    ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
+                    " ",
+                    ["get","name:nonlatin"]])
+            map.setLayoutProperty("place_label", 'text-field',
+                ["concat",
+                    ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
+                    "\n",
+                    ["get","name:nonlatin"]])
         }
     })
 

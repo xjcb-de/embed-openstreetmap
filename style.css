@@ -1,0 +1,44 @@
+#mapStyle { color: #333333 }
+
+.mapboxgl-ctrl-group:not(:empty), .maplibregl-ctrl-group:not(:empty) {
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 5px -2px;
+    border-radius: 0;
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' width='15' height='15'>\
+            <path fill='%23333333' d='M 0,2 L 2,2 2,0 3,0 3,2 5,2 5,3 3,3 3,5 2,5 2,3 0,3 Z'/>\
+        </svg>"
+    );
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 5' width='15' height='15'>\
+            <path fill='%23333333' d='M 0,2 L 5,2 5,3 0,3 Z'/>\
+        </svg>"
+    );
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-fullscreen .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' width='17' height='17'>\
+            <path fill='%23333333' d='  M 0,0 L 3,0 3,1 1,1 1,3 0,3 Z\
+                                        M 9,0 L 9,3 8,3 8,1 6,1 6,0 Z\
+                                        M 9,9 L 6,9 6,8 8,8 8,6 9,6 Z\
+                                        M 0,9 L 0,6 1,6 1,8 3,8 3,9 Z'/>\
+        </svg>"
+    );
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-shrink .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon {
+    background-image: url("data:image/svg+xml;charset=utf-8,\
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9' width='17' height='17'>\
+            <path fill='%23333333' d='  M 3,3 L 3,0 2,0 2,2 0,2 0,3 Z\
+                                        M 6,3 L 6,0 7,0 7,2 9,2 9,3 Z\
+                                        M 6,6 L 6,9 7,9 7,7 9,7 9,6 Z\
+                                        M 3,6 L 0,6 0,7 2,7 2,9 3,9 Z'/>\
+        </svg>"
+    );
+}

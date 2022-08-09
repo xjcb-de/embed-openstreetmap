@@ -1,0 +1,26 @@
+/* This style was found on the website https://istheservicedown.com/problems/charter-communications/map and copies the google maps style */
+
+.mapboxgl-ctrl-group, .maplibregl-ctrl-group {
+  box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px !important;
+  border-radius: 0;
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-fullscreen .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-fullscreen .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath fill='%23666' d='M0 0v6h2V2h4V0H0zm16 0h-4v2h4v4h2V0h-2zm0 16h-4v2h6v-6h-2v4zM2 12H0v6h6v-2H2v-4z'/%3E%3C/svg%3E");
+  background-size: 18px;
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-shrink .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-shrink .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath fill='%23666' d='M4 4H0v2h6V0H4v4zm10 0V0h-2v6h6V4h-4zm-2 14h2v-4h4v-2h-6v6zM0 14h4v4h2v-6H0v2z'/%3E%3C/svg%3E");
+  background-size: 18px;
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-zoom-in .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath fill='%23666' d='M18 7h-7V0H7v7H0v4h7v7h4v-7h7z'/%3E%3C/svg%3E");
+  background-size: 18px;
+}
+
+.mapboxgl-ctrl button.mapboxgl-ctrl-zoom-out .mapboxgl-ctrl-icon, .maplibregl-ctrl button.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath fill='%23666' d='M0 7h18v4H0V7z'/%3E%3C/svg%3E");
+  background-size: 18px;
+}

@@ -16,7 +16,7 @@
         "name": "en",
         "qwantStyleName": "Map",
         "qwantStyleURI": "qwant-style/built-style-en.json",
-        "maptilerHybridStyleName": "Satellite",
+        "mapboxSatelliteStreetsStyleName": "Satellite",
         "mapLocale": {},
         "cooperativeGestures": {},
     }
@@ -24,7 +24,7 @@
         "name": "de",
         "qwantStyleName": "Karte",
         "qwantStyleURI": "qwant-style/built-style-de.json",
-        "maptilerHybridStyleName": "Satellit",
+        "mapboxSatelliteStreetsStyleName": "Satellit",
         "mapLocale": {
             'FullscreenControl.Enter': 'Vollbild',
             'FullscreenControl.Exit': 'Vollbildmodus beenden',
@@ -41,6 +41,7 @@
 
     /*   ---------- CONFIGURATION ----------   */
     accessToken = "get_your_own_OpIi9ZULNHzrESv6T2vL" //get your key from https://cloud.maptiler.com/account/keys/
+    accessTokenMapbox = "get_your_own" //get your key from https://account.mapbox.com/access-tokens/create
     locale = locale_en //locale_en and locale_de are currently supported
     mapCenter = [8.40414,49.01376]
     mapZoom = 16
@@ -66,11 +67,11 @@
 
     /* Setup the styles */
     const mapTilerLogo = {'src': 'https://api.maptiler.com/resources/logo.svg', 'href': 'https://maptiler.com/'}
+    const mapBoxLogo = {'src': 'mapbox.svg', 'href': 'https://mapbox.com/about/maps'}
     var mapStyles = [{'name': locale.qwantStyleName, 'data': undefined, 'initAndSet': initAndSetQwantStyle, 'logo': mapTilerLogo},
-                     {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken, 'logo': mapTilerLogo}]
-    var nextMapStyleIndex = 0
+                     {'name': locale.mapboxSatelliteStreetsStyleName, 'data': undefined, 'initAndSet': initAndSetMapboxStyle, 'logo': mapBoxLogo}]
 
-    map.on('styledata', (e) => { if (e.style.stylesheet.id == "hybrid") localizeMaptilerHybridStyle() })
+    var nextMapStyleIndex = 0
 
     logoImg = document.createElement("img")
     logo = document.createElement("a")
@@ -184,24 +185,24 @@
         })
     }
 
-    /* maptilerHybridStyle is added to the map on demand.
-     * Every time it is loaded as the current style for the map,
-     * this function in invoked and the locale gets changed here. */
-    function localizeMaptilerHybridStyle() {
-        //layers that contain a value with "name" in it => have to be adapted to the locale
-        for (layerId of ["state_label", "country_label"]) {
-            map.setLayoutProperty(layerId, 'text-field', ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]])
-        }
-        map.setLayoutProperty("road_label", 'text-field',
-            ["concat",
-                ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
-                " ",
-                ["get","name:nonlatin"]])
-        map.setLayoutProperty("place_label", 'text-field',
-            ["concat",
-                ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
-                "\n",
-                ["get","name:nonlatin"]])
+    /* mapbox satellite-streets style gets loaded from from their server,
+     * then customized and after that it is set as the current style of the map */
+    function initAndSetMapboxStyle(index) {
+        fetch('https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11?access_token=' + accessTokenMapbox).then((response) => response.text()).then((text) => {
+            /* adapt locale */
+            let localeText = text.replaceAll("name_en", "name_"+locale.name)
+            var json = JSON.parse(localeText)
+
+            /* replace mapbox://... scheme with https://... adresses */
+            json.sources['mapbox://mapbox.satellite'].url = 'https://api.mapbox.com/v4/mapbox.satellite.json?secure=&access_token=' + accessTokenMapbox
+            json.sources.composite.url = 'https://api.mapbox.com/v4/mapbox.mapbox-streets-v8.json?secure=&access_token=' + accessTokenMapbox
+            json.sprite = 'https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/sprite?access_token=' + accessTokenMapbox
+            json.glyphs = 'https://api.mapbox.com/fonts/v1/mapbox/{fontstack}/{range}.pbf?access_token=' + accessTokenMapbox
+
+            /* save style and set it as current map style */
+            mapStyles[index].data = json
+            map.setStyle(mapStyles[index].data, false)
+        })
     }
 </script>
 

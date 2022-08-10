@@ -48,7 +48,8 @@
     mapZoom = 16
     mapPitch = 45,      //set to 0 if not needed
     mapBearing = -17.6, //set to 0 if not needed
-    popupHTML = '<h2>Schloss Karlsruhe</h2><a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>'
+    popupHTML = `<h2>Schloss Karlsruhe</h2>
+                 <a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>`
     markerColor = "#e68600"
     /*   -----------------------------------   */
 
@@ -62,41 +63,24 @@
         antialias: true,
         cooperativeGestures: true, //todo (not working yet with maplibregl)
         locale: locale.mapLocale
-    });
-
-    /* Set the style */
-    var mapStyles = [{'name': locale.qwantStyleName, 'data': null},
-                    {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
-    var nextMapStyle = undefined
-
-    //qwantStyle is loaded from local file, then changed and after that it is set as the current style of the map
-    fetch(locale.qwantStyleURI).then((response) => response.json()).then((json) => {
-        useMaptilerForTiles(json)
-        add3dBuildingSource(json)
-        fixAttributions(json)
-        mapStyles[0].data = json
-        map.setStyle(mapStyles[0].data, false)
     })
 
-    //maptilerHybridStyle is added to the map on demand. After it is loaded, the locale is changed here.
-    map.on('styledata', (e) => {
-        if (e.style.stylesheet.id == "hybrid") {
-            //layers that contain a value with "name" in it => have to be adapted to the locale
-            for (layerId of ["state_label", "country_label"]) {
-                map.setLayoutProperty(layerId, 'text-field', ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]])
-            }
-            map.setLayoutProperty("road_label", 'text-field',
-                ["concat",
-                    ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
-                    " ",
-                    ["get","name:nonlatin"]])
-            map.setLayoutProperty("place_label", 'text-field',
-                ["concat",
-                    ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
-                    "\n",
-                    ["get","name:nonlatin"]])
-        }
-    })
+    /* Setup the styles */
+    var mapStyles = [{'name': locale.qwantStyleName, 'data': undefined, 'initAndSet': initAndSetQwantStyle, },
+                     {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
+    var nextMapStyleIndex = 0
+
+    mapStyle = document.createElement("button")
+    mapStyle.id = "mapStyle"
+    mapStyle.type = "button"
+    mapStyle.addEventListener("click", switchMapStyle)
+    switchMapStyle() // initializes button text and first style
+    mapStyleDiv = document.createElement("div")
+    mapStyleDiv.appendChild(mapStyle)
+    mapStyleDiv.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group")
+    document.getElementsByClassName("maplibregl-ctrl-top-left")[0].appendChild(mapStyleDiv)
+
+    map.on('styledata', (e) => { if (e.style.stylesheet.id == "hybrid") localizeMaptilerHybridStyle() })
 
     /* Setup controls and popup */
     for (className of ["maplibregl-compact-show", "mapboxgl-compact-show"]) {
@@ -105,10 +89,10 @@
         }
     }
 
-    const nav = new maplibregl.NavigationControl({visualizePitch: true});
-    map.addControl(nav, 'bottom-right');
+    const nav = new maplibregl.NavigationControl({visualizePitch: true})
+    map.addControl(nav, 'bottom-right')
 
-    map.addControl(new maplibregl.FullscreenControl());
+    map.addControl(new maplibregl.FullscreenControl())
 
     const popup = new maplibregl.Popup({ offset: 25, closeOnClick: false })
         .setHTML(popupHTML)
@@ -116,69 +100,89 @@
     const marker = new maplibregl.Marker({color: markerColor})
         .setLngLat(mapCenter)
         .setPopup(popup)
-        .addTo(map);
-    marker.togglePopup();
+        .addTo(map)
+    marker.togglePopup()
 
-    /* Toggle satellite / streets view */
-    mapStyle = document.createElement("button");
-    mapStyle.id = "mapStyle";
-    mapStyle.type = "button";
-    mapStyle.addEventListener("click", toggleMapStyle);
-    toggleMapStyle(); // initialize button text
-    mapStyleDiv = document.createElement("div");
-    mapStyleDiv.appendChild(mapStyle);
-    mapStyleDiv.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group");
-    document.getElementsByClassName("maplibregl-ctrl-top-left")[0].appendChild(mapStyleDiv);
 
-    function toggleMapStyle() {
-            if (nextMapStyle == undefined) nextMapStyle = 0;
-            map.setStyle(mapStyles[nextMapStyle].data, false);
-            nextMapStyle = (nextMapStyle + 1) % mapStyles.length
-            mapStyle.innerText = mapStyles[nextMapStyle].name;
-            mapStyle.setAttribute("aria-label", mapStyles[nextMapStyle].name);
+    function switchMapStyle() {
+        if (mapStyles[nextMapStyleIndex].data == undefined) {
+            mapStyles[nextMapStyleIndex].initAndSet(nextMapStyleIndex)
+        } else {
+            map.setStyle(mapStyles[nextMapStyleIndex].data, false)
+        }
+        nextMapStyleIndex = (nextMapStyleIndex + 1) % mapStyles.length
+        mapStyle.innerText = mapStyles[nextMapStyleIndex].name
+        mapStyle.setAttribute("aria-label", mapStyles[nextMapStyleIndex].name)
     }
 
-    function useMaptilerForTiles(style) {
-        style.sprite = window.location.href + "/../qwant-style/sprite"
-        style.glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=" + accessToken
-        style.sources.basemap.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
-        style.sources.poi.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
-    }
+    /* qwantStyle gets loaded from local file, then customized
+     * and after that it is set as the current style of the map */
+    function initAndSetQwantStyle(index) {
+        fetch(locale.qwantStyleURI).then((response) => response.json()).then((json) => {
+            /* use maptiler for tiles */
+            json.sprite = window.location.href + "/../qwant-style/sprite"
+            json.glyphs = "https://api.maptiler.com/fonts/{fontstack}/{range}.pbf?key=" + accessToken
+            json.sources.basemap.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
+            json.sources.poi.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
 
-    function add3dBuildingSource(style) {
-        //taken from https://api.maptiler.com/maps/streets/style.json?key=...
-        style.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=" + accessToken,"type":"vector"}
-        style.layers.push({
-            "id": "building-3d",
-            "type": "fill-extrusion",
-            "source": "openmaptiles",
-            "source-layer": "building",
-            "minzoom": 16,
-            "layout": {"visibility": "visible"},
-            "paint": {
-                "fill-extrusion-base": {
-                "type": "identity",
-                "property": "render_min_height"
+            /* add 3D building source */
+            //taken from https://api.maptiler.com/maps/streets/style.json?key=...
+            json.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=" + accessToken,"type":"vector"}
+            json.layers.push({
+                "id": "building-3d",
+                "type": "fill-extrusion",
+                "source": "openmaptiles",
+                "source-layer": "building",
+                "minzoom": 16,
+                "layout": {"visibility": "visible"},
+                "paint": {
+                    "fill-extrusion-base": {
+                    "type": "identity",
+                    "property": "render_min_height"
+                    },
+                    "fill-extrusion-color": "rgba(189, 185, 181, 1)",
+                    "fill-extrusion-height": {
+                    "type": "identity",
+                    "property": "render_height"
+                    },
+                    "fill-extrusion-opacity": 0.3
                 },
-                "fill-extrusion-color": "rgba(189, 185, 181, 1)",
-                "fill-extrusion-height": {
-                "type": "identity",
-                "property": "render_height"
-                },
-                "fill-extrusion-opacity": 0.3
-            },
-            "metadata": {},
-            "filter": ["all",["!has","hide_3d"]]
+                "metadata": {},
+                "filter": ["all",["!has","hide_3d"]]
+            })
+
+            /* fix attributions */
+            json.sources.openmaptiles.attribution=""
+            json.sources.poi.attribution=""
+            json.sources.basemap.attribution=`
+                <a href=\"https://github.com/Qwant/qwant-basic-gl-style/blob/master/LICENSE.md#design-license-cc-by-40\" target=\"_blank\">&copy; Qwant</a>
+                <a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">&copy; MapTiler</a>
+                <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>`
+
+            /* save style and set it as current map style */
+            mapStyles[index].data = json
+            map.setStyle(mapStyles[index].data, false)
         })
     }
 
-    function fixAttributions(style) {
-        style.sources.openmaptiles.attribution=""
-        style.sources.poi.attribution=""
-        style.sources.basemap.attribution=`
-            <a href=\"https://github.com/Qwant/qwant-basic-gl-style/blob/master/LICENSE.md#design-license-cc-by-40\" target=\"_blank\">&copy; Qwant</a>
-            <a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">&copy; MapTiler</a>
-            <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>`
+    /* maptilerHybridStyle is added to the map on demand.
+     * Every time it is loaded as the current style for the map,
+     * this function in invoked and the locale gets changed here. */
+    function localizeMaptilerHybridStyle() {
+        //layers that contain a value with "name" in it => have to be adapted to the locale
+        for (layerId of ["state_label", "country_label"]) {
+            map.setLayoutProperty(layerId, 'text-field', ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]])
+        }
+        map.setLayoutProperty("road_label", 'text-field',
+            ["concat",
+                ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
+                " ",
+                ["get","name:nonlatin"]])
+        map.setLayoutProperty("place_label", 'text-field',
+            ["concat",
+                ["case",["has","name:"+locale.name],["get","name:"+locale.name],["get","name:latin"]],
+                "\n",
+                ["get","name:nonlatin"]])
     }
 </script>
 

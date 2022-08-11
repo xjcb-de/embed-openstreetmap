@@ -22,7 +22,8 @@
         "qwantStyleName": "Map",
         "qwantStyleURI": "qwant-style/built-style-en.json",
         "maptilerHybridStyleName": "Satellite",
-        "mapLocale": {}
+        "mapLocale": {},
+        "cooperativeGestures": {},
     }
     let locale_de = {
         "name": "de",
@@ -35,10 +36,12 @@
             'NavigationControl.ResetBearing': 'Drehung zurücksetzen',
             'NavigationControl.ZoomIn': 'Vergrößern',
             'NavigationControl.ZoomOut': 'Verkleinern',
-            'ScrollZoomBlocker.CtrlMessage': 'Verwende Strg+Scrollen zum Zoomen der Karte',
-            'ScrollZoomBlocker.CmdMessage': 'Verwende ⌘+Scrollen zum Zoomen der Karte',
-            'TouchPanBlocker.Message': 'Verschieben der Karte mir zwei Fingern',
-        }
+        },
+        "cooperativeGestures": {
+            windowsHelpText: "Verwende Strg+Scrollen zum Zoomen der Karte",
+            macHelpText: "Verwende ⌘+Scrollen zum Zoomen der Karte",
+            mobileHelpText: "Verschieben der Karte mir zwei Fingern",
+        },
     }
 
     /*   ---------- CONFIGURATION ----------   */
@@ -46,11 +49,12 @@
     locale = locale_en //locale_en and locale_de are currently supported
     mapCenter = [8.40414,49.01376]
     mapZoom = 16
-    mapPitch = 45,      //set to 0 if not needed
-    mapBearing = -17.6, //set to 0 if not needed
+    mapPitch = 45      //set to 0 if not needed
+    mapBearing = -17.6 //set to 0 if not needed
+    cooperativeGestures = true //prevent inadvertent scrolling/panning when navigating a page where map is embedded inline
+    markerColor = "#e68600"
     popupHTML = `<h2>Schloss Karlsruhe</h2>
                  <a href="https://de.wikipedia.org/wiki/Schloss_Karlsruhe" target="_blank">Wikipedia Artikel</a>`
-    markerColor = "#e68600"
     /*   -----------------------------------   */
 
     /* Create the map */
@@ -61,7 +65,7 @@
         bearing: mapBearing,
         container: 'map',
         antialias: true,
-        cooperativeGestures: true, //todo (not working yet with maplibregl)
+        cooperativeGestures: cooperativeGestures ? locale.cooperativeGestures : undefined,
         locale: locale.mapLocale
     })
 
@@ -69,6 +73,8 @@
     var mapStyles = [{'name': locale.qwantStyleName, 'data': undefined, 'initAndSet': initAndSetQwantStyle, },
                      {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
     var nextMapStyleIndex = 0
+
+    map.on('styledata', (e) => { if (e.style.stylesheet.id == "hybrid") localizeMaptilerHybridStyle() })
 
     mapStyle = document.createElement("button")
     mapStyle.id = "mapStyle"
@@ -79,8 +85,6 @@
     mapStyleDiv.appendChild(mapStyle)
     mapStyleDiv.classList.add("maplibregl-ctrl", "maplibregl-ctrl-group")
     document.getElementsByClassName("maplibregl-ctrl-top-left")[0].appendChild(mapStyleDiv)
-
-    map.on('styledata', (e) => { if (e.style.stylesheet.id == "hybrid") localizeMaptilerHybridStyle() })
 
     /* Setup controls and popup */
     for (className of ["maplibregl-compact-show", "mapboxgl-compact-show"]) {
@@ -126,7 +130,8 @@
             json.sources.poi.tiles[0] = "https://api.maptiler.com/tiles/v3/{z}/{x}/{y}.pbf?key=" + accessToken
 
             /* add 3D building source */
-            //taken from https://api.maptiler.com/maps/streets/style.json?key=...
+            // taken from https://github.com/openmaptiles/maptiler-3d-gl-style/blob/master/style.json
+            // respectively https://api.maptiler.com/maps/streets/style.json?key=...
             json.sources.openmaptiles = {"url":"https://api.maptiler.com/tiles/v3/tiles.json?key=" + accessToken,"type":"vector"}
             json.layers.push({
                 "id": "building-3d",
@@ -156,6 +161,7 @@
             json.sources.poi.attribution=""
             json.sources.basemap.attribution=`
                 <a href=\"https://github.com/Qwant/qwant-basic-gl-style/blob/master/LICENSE.md#design-license-cc-by-40\" target=\"_blank\">&copy; Qwant</a>
+                <a href=\"https://openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a>
                 <a href=\"https://www.maptiler.com/copyright/\" target=\"_blank\">&copy; MapTiler</a>
                 <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>`
 

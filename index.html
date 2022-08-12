@@ -12,6 +12,7 @@
     #map { position: absolute; top: 0; bottom: 0; width: 100%; }
     #mapStyle { min-width: 4.5em !important; }
     .maplibregl-marker {cursor: pointer}
+    #logo { max-height: 20px; margin: 0 0 5px 5px; }
 </style>
 </head>
 <body>
@@ -70,11 +71,21 @@
     })
 
     /* Setup the styles */
-    var mapStyles = [{'name': locale.qwantStyleName, 'data': undefined, 'initAndSet': initAndSetQwantStyle, },
-                     {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken}]
+    const mapTilerLogo = {'src': 'https://api.maptiler.com/resources/logo.svg', 'href': 'https://maptiler.com/'}
+    var mapStyles = [{'name': locale.qwantStyleName, 'data': undefined, 'initAndSet': initAndSetQwantStyle, 'logo': mapTilerLogo},
+                     {'name': locale.maptilerHybridStyleName, 'data': 'https://api.maptiler.com/maps/hybrid/style.json?key=' + accessToken, 'logo': mapTilerLogo}]
     var nextMapStyleIndex = 0
 
     map.on('styledata', (e) => { if (e.style.stylesheet.id == "hybrid") localizeMaptilerHybridStyle() })
+
+    logoImg = document.createElement("img")
+    logo = document.createElement("a")
+    logo.id = "logo"
+    logo.rel = "noopener nofollow"
+    logo.target = "_blank"
+    logo.appendChild(logoImg)
+    logo.classList.add("maplibregl-ctrl")
+    document.getElementsByClassName("maplibregl-ctrl-bottom-left")[0].appendChild(logo)
 
     mapStyle = document.createElement("button")
     mapStyle.id = "mapStyle"
@@ -113,6 +124,13 @@
             mapStyles[nextMapStyleIndex].initAndSet(nextMapStyleIndex)
         } else {
             map.setStyle(mapStyles[nextMapStyleIndex].data, false)
+        }
+        if (mapStyles[nextMapStyleIndex].logo == undefined) {
+            logoImg.src = ""
+            logo.href = ""
+        } else {
+            logoImg.src = mapStyles[nextMapStyleIndex].logo.src
+            logo.href = mapStyles[nextMapStyleIndex].logo.href
         }
         nextMapStyleIndex = (nextMapStyleIndex + 1) % mapStyles.length
         mapStyle.innerText = mapStyles[nextMapStyleIndex].name
@@ -157,6 +175,7 @@
             })
 
             /* fix attributions */
+            // Using maptiler API requires "© MapTiler" attribution and icon with links
             json.sources.openmaptiles.attribution=""
             json.sources.poi.attribution=""
             json.sources.basemap.attribution=`

@@ -6,7 +6,7 @@ So I created one, composed of different open source projects, that I think can c
 
 ## Demo
 
-![](https://xjcb.de/projects/embed-openstreetmap/screenshot1.png)
+![](https://xjcb.de/projects/embed-openstreetmap/screenshot.png)
 
 [See the map in action](https://xjcb.de/projects/embed-openstreetmap/)
 
@@ -21,7 +21,7 @@ So I created one, composed of different open source projects, that I think can c
 4. Integrate the map into your website with an iframe
 
 ```html
-<iframe src="https://example.com/map/" style="border:none; width:800px; height:500px"/>
+<iframe src="https://example.com/map/" style="border:none; width:800px; height:500px"></iframe>
 ```
 
 ## Features

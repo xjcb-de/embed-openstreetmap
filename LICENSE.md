@@ -167,6 +167,8 @@ exceptions on a commercial basis.
 
 Contains code from  Qwant/qwant-basic-gl-style  (https://github.com/Qwant/qwant-basic-gl-style)
 
+The Mapbox GL Style JSON file is mainly inspirated by [OpenMapTiles OSM Bright](https://github.com/openmaptiles/osm-bright-gl-style), [Lukas Martinelli OSM Liberty](https://github.com/lukasmartinelli/osm-liberty/) and [Klokantech GL Style](https://github.com/openmaptiles/klokantech-3d-gl-style/).
+
 # Fonts
 
 The fonts used are :

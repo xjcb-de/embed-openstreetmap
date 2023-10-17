@@ -161,3 +161,18 @@ Exceptions to OpenMapTiles attribution requirement can be in a written form gran
 by Klokan Technologies GmbH (info@klokantech.com).
 The project contributors grant Klokan Technologies GmbH the license to give such
 exceptions on a commercial basis.
+
+
+-------------------------------------------------------------------------------
+
+Contains code from  Qwant/qwant-basic-gl-style  (https://github.com/Qwant/qwant-basic-gl-style)
+
+# Fonts
+
+The fonts used are :
+* Noto Sans. This Font Software is licensed under the SIL Open Font License, Version 1.1. You may obtain a copy of the license at http://scripts.sil.org/OFL.
+
+
+# Icons
+
+The icons are originally derived from the [Maki POI icon set](https://github.com/mapbox/maki/blob/master/LICENSE.txt) which is licensed under CC0 1.0 Universal.
